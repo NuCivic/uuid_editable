@@ -1,0 +1,109 @@
+<?php
+/**
+ * @file
+ * Code for the UUID editable module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function uuid_editable_menu() {
+  $items = array();
+  $items['admin/config/content/uuid_editable'] = array(
+    'title' => 'UUID Editable settings',
+    'description' => 'Settings for UUID Editable.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uuid_editable_settings'),
+    'access arguments' => array('administer site configuration'),
+  );
+  return $items;
+}
+
+/**
+ * Return settings for drupal_get_form.
+ * @return array
+ *   Drupal System Settings Form.
+ */
+function uuid_editable_settings() {
+  $form = array();
+  $form['uuid_editable_node_types'] = array(
+    '#title' => t('Content types'),
+    '#type' => 'checkboxes',
+    '#description' => t('Select nodes in which UUID is editable.'),
+    '#default_value' => variable_get('uuid_editable_node_types', array()),
+    '#options' => node_type_get_names(),
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function uuid_editable_form_alter(&$form, &$form_state, $form_id) {
+  $form_types = uuid_editable_enabled_content_types();
+  if (in_array($form['form_id']['#id'], $form_types)) {
+    // Add a dummy field to hold the uuid.
+    $form['uuid_editable'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Identifier',
+      '#description' => 'UUID associated with this content',
+      '#required' => FALSE,
+      '#maxlength' => 255,
+      '#default_value' => uuid_generate(),
+      '#weight' => -100,
+    );
+    // If this is an existing node then use the actual uuid.
+    if (isset($form['#node']->uuid)) {
+      $form['identifier']['#default_value'] = $form['#node']->uuid;
+    }
+  }
+}
+
+/**
+ * Implements hook_node_submit().
+ */
+function uuid_editable_node_submit($node, $form, &$form_state) {
+  $form_types = uuid_editable_enabled_content_types();
+  if (in_array($form['form_id']['#id'], $form_types)) {
+    // Alter the node's uuid on node submit.
+    $form_state['node']->uuid = $form_state['values']['identifier'];
+  }
+}
+
+/**
+ * Returns a list of uuid editable enabled content types edit forms.
+ * @return array
+ *   The list of content types forms ids.
+ */
+function uuid_editable_enabled_content_types() {
+  $node_types = variable_get('uuid_editable_node_types', array());
+  $form_types = array();
+  foreach ($node_types as $key => $value) {
+    if ($value) {
+      array_push($form_types, 'edit-' . $value . '-node-form');
+    }
+  }
+  return $form_types;
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function uuid_editable_field_extra_fields() {
+  $node_types = variable_get('uuid_editable_node_types', array());
+  $form_types = array();
+  foreach ($node_types as $key => $value) {
+    if ($value) {
+      $extra['node'][$value] = array(
+        'form' => array(
+          'uuid_editable' => array(
+            'label' => t('UUID Editable'),
+            'description' => t('Input to edit UUIDs'),
+            'weight' => -4,
+          ),
+        ),
+      );
+    }
+  }
+  return $extra;
+}
