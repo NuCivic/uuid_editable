@@ -54,7 +54,7 @@ function uuid_editable_form_alter(&$form, &$form_state, $form_id) {
     );
     // If this is an existing node then use the actual uuid.
     if (isset($form['#node']->uuid)) {
-      $form['identifier']['#default_value'] = $form['#node']->uuid;
+      $form['uuid_editable']['#default_value'] = $form['#node']->uuid;
     }
   }
 }
