@@ -66,7 +66,7 @@ function uuid_editable_node_submit($node, $form, &$form_state) {
   $form_types = uuid_editable_enabled_content_types();
   if (in_array($form['form_id']['#id'], $form_types)) {
     // Alter the node's uuid on node submit.
-    $form_state['node']->uuid = $form_state['values']['identifier'];
+    $form_state['node']->uuid = $form_state['values']['uuid_editable'];
   }
 }
 
