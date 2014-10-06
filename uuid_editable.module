@@ -60,6 +60,15 @@ function uuid_editable_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_node_validate().
+ */
+function uuid_editable_node_validate($node, $form, &$form_state) {
+  if (isset($node->uuid_editable) && strlen($node->uuid_editable) != 36) {
+    form_set_error('uuid_editable', t('Unique Identifier must be 36 characters long. The Identifier entered is %uuid_length characters long.', array('%uuid_length' => strlen($node->uuid_editable))));
+  }
+}
+
+/**
  * Implements hook_node_submit().
  */
 function uuid_editable_node_submit($node, $form, &$form_state) {
